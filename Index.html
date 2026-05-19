@@ -4,450 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>비즈니스 KPI 대시보드</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, "Noto Sans KR", sans-serif;
       background: #f4f6f8;
-      color: #1f2937;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 32px;
-    }
-    header { margin-bottom: 28px; }
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 32px;
       color: #111827;
     }
-    header p {
-      margin: 0;
-      color: #6b7280;
-    }
-    .loading, .error {
-      background: #fff;
-      border-radius: 14px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    }
-    .error {
-      color: #b91c1c;
-      display: none;
-      line-height: 1.6;
-    }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-      margin-bottom: 26px;
-    }
-    .kpi-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 22px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-      border-left: 5px solid #2563eb;
-    }
-    .kpi-card h3 {
-      margin: 0 0 12px;
-      font-size: 15px;
-      color: #6b7280;
-      font-weight: 600;
-    }
-    .kpi-value {
-      font-size: 26px;
-      font-weight: 800;
-      color: #111827;
-      margin-bottom: 8px;
-    }
-    .kpi-note {
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.4;
-    }
-    .chart-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 22px;
-      margin-bottom: 26px;
-    }
-    .chart-card, .table-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    }
-    .chart-card h2, .table-card h2 {
-      margin: 0 0 18px;
-      font-size: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    th, td {
-      padding: 12px 10px;
+
+    header {
+      padding: 20px 28px;
+      background: #ffffff;
       border-bottom: 1px solid #e5e7eb;
-      text-align: left;
     }
-    th {
-      background: #f9fafb;
-      color: #374151;
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
       font-weight: 700;
     }
-    .right { text-align: right; }
-    @media (max-width: 900px) {
-      .kpi-grid, .chart-grid { grid-template-columns: 1fr; }
-      .container { padding: 20px; }
+
+    header p {
+      margin: 6px 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .frame-wrap {
+      width: 100%;
+      height: calc(100vh - 86px);
+      background: #ffffff;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #ffffff;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>비즈니스 KPI 대시보드</h1>
-      <p>Google Sheets 데이터를 직접 불러와 KPI와 카테고리별 매출을 시각화한 웹 대시보드</p>
-    </header>
+  <header>
+    <h1>비즈니스 KPI 대시보드</h1>
+    <p>Google Sheets → Apps Script Web App → Netlify 구조로 연결한 KPI 대시보드</p>
+  </header>
 
-    <div id="loading" class="loading">Google Sheets 데이터를 불러오는 중입니다...</div>
-    <div id="error" class="error"></div>
-
-    <main id="dashboard" style="display:none;">
-      <section id="kpiGrid" class="kpi-grid"></section>
-
-      <section class="chart-grid">
-        <div class="chart-card">
-          <h2>카테고리별 매출액</h2>
-          <canvas id="revenueChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <h2>카테고리별 판매수량</h2>
-          <canvas id="quantityChart"></canvas>
-        </div>
-      </section>
-
-      <section class="table-card">
-        <h2>카테고리별 매출 상세</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>카테고리</th>
-              <th class="right">판매수량</th>
-              <th class="right">판매금액</th>
-              <th class="right">구성비</th>
-            </tr>
-          </thead>
-          <tbody id="categoryTable"></tbody>
-        </table>
-      </section>
-    </main>
+  <div class="frame-wrap">
+    <iframe
+      src="https://script.google.com/macros/s/AKfycbwNbvhsfW2lA63yYRak9byF2IdwEbYkpMNbNMFq9WoVFCm9eV7VZDhPf3vXCoMy6Pci/exec"
+      title="비즈니스 KPI 대시보드">
+    </iframe>
   </div>
-
-  <script>
-    const SHEET_ID = "1XIz7e9V8R7A4joYwauNBRWym0W99c1wFY9Y1PN2cifw";
-    const SUMMARY_SHEET_NAME = "Dashboard_Summary";
-    const CSV_URL =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SUMMARY_SHEET_NAME)}`;
-
-    let revenueChart = null;
-    let quantityChart = null;
-
-    document.addEventListener("DOMContentLoaded", loadDashboard);
-
-    async function loadDashboard() {
-      try {
-        const response = await fetch(CSV_URL, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Google Sheets 데이터를 불러오지 못했습니다. 시트 공유 권한 또는 시트 이름을 확인하세요.");
-        }
-
-        const csvText = await response.text();
-        if (!csvText || csvText.trim().startsWith("<!DOCTYPE html")) {
-          throw new Error("CSV 데이터가 아니라 HTML 응답이 왔습니다. Google Sheet 공유 설정을 '링크가 있는 모든 사용자 - 뷰어'로 바꾸거나 '파일 → 공유 → 웹에 게시'를 확인하세요.");
-        }
-
-        const rows = parseCSV(csvText);
-        const data = parseDashboardSummary(rows);
-
-        if (data.kpis.length === 0 && data.categoryData.length === 0) {
-          throw new Error("Dashboard_Summary 시트에서 KPI 또는 카테고리별 매출 데이터를 찾지 못했습니다.");
-        }
-
-        renderDashboard(data);
-      } catch (error) {
-        showError(error.message || "데이터를 불러오는 중 오류가 발생했습니다.");
-      }
-    }
-
-    function parseCSV(text) {
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const next = text[i + 1];
-
-        if (char === '"' && inQuotes && next === '"') {
-          cell += '"';
-          i++;
-        } else if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
-          row.push(cell);
-          cell = "";
-        } else if ((char === "\n" || char === "\r") && !inQuotes) {
-          if (char === "\r" && next === "\n") i++;
-          row.push(cell);
-          rows.push(row);
-          row = [];
-          cell = "";
-        } else {
-          cell += char;
-        }
-      }
-
-      if (cell.length > 0 || row.length > 0) {
-        row.push(cell);
-        rows.push(row);
-      }
-
-      return rows;
-    }
-
-    function parseDashboardSummary(rows) {
-      const kpis = [];
-      const categoryData = [];
-      let inCategorySection = false;
-      let foundCategoryHeader = false;
-
-      rows.forEach(row => {
-        const a = cleanText(row[0]);
-        const b = row[1] ?? "";
-        const c = row[2] ?? "";
-        const d = row[3] ?? "";
-
-        if (!a) return;
-
-        if (a.includes("카테고리별 매출") || a.includes("카테고리별") || a.includes("Category")) {
-          inCategorySection = true;
-          return;
-        }
-
-        if (inCategorySection && a === "카테고리") {
-          foundCategoryHeader = true;
-          return;
-        }
-
-        if (inCategorySection && foundCategoryHeader) {
-          const category = a;
-          const quantity = toNumber(b);
-          const revenue = toNumber(c);
-          const ratio = toRatio(d);
-
-          if (category && (quantity > 0 || revenue > 0)) {
-            categoryData.push({ category, quantity, revenue, ratio });
-          }
-          return;
-        }
-
-        if (
-          a !== "지표" &&
-          a !== "수식" &&
-          a !== "단위" &&
-          cleanText(b) !== ""
-        ) {
-          kpis.push({
-            metric: a,
-            value: toNumber(b),
-            unit: cleanText(c),
-            note: cleanText(d)
-          });
-        }
-      });
-
-      return { kpis, categoryData };
-    }
-
-    function cleanText(value) {
-      if (value === null || typeof value === "undefined") return "";
-      return String(value).trim();
-    }
-
-    function toNumber(value) {
-      if (typeof value === "number") return value;
-      if (value === null || typeof value === "undefined" || value === "") return 0;
-
-      const cleaned = String(value)
-        .replace(/₩/g, "")
-        .replace(/원/g, "")
-        .replace(/건/g, "")
-        .replace(/개/g, "")
-        .replace(/,/g, "")
-        .replace(/%/g, "")
-        .trim();
-
-      const num = Number(cleaned);
-      return Number.isNaN(num) ? 0 : num;
-    }
-
-    function toRatio(value) {
-      if (typeof value === "number") return value > 1 ? value / 100 : value;
-      if (value === null || typeof value === "undefined" || value === "") return 0;
-
-      const text = String(value).trim();
-      if (text.includes("%")) {
-        const num = Number(text.replace("%", "").trim());
-        return Number.isNaN(num) ? 0 : num / 100;
-      }
-
-      const num = Number(text);
-      if (Number.isNaN(num)) return 0;
-      return num > 1 ? num / 100 : num;
-    }
-
-    function formatKRW(value) {
-      return new Intl.NumberFormat("ko-KR", {
-        style: "currency",
-        currency: "KRW",
-        maximumFractionDigits: 0
-      }).format(Number(value) || 0);
-    }
-
-    function formatNumber(value) {
-      return new Intl.NumberFormat("ko-KR").format(Number(value) || 0);
-    }
-
-    function formatPercent(value) {
-      return ((Number(value) || 0) * 100).toFixed(1) + "%";
-    }
-
-    function formatKpiValue(kpi) {
-      if (kpi.unit === "원") return formatKRW(kpi.value);
-      if (kpi.unit === "건") return formatNumber(kpi.value) + "건";
-      if (kpi.unit === "개") return formatNumber(kpi.value) + "개";
-      return formatNumber(kpi.value) + (kpi.unit ? " " + kpi.unit : "");
-    }
-
-    function renderDashboard(data) {
-      document.getElementById("loading").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-      renderKpis(data.kpis || []);
-      renderCategoryTable(data.categoryData || []);
-      renderCharts(data.categoryData || []);
-    }
-
-    function renderKpis(kpis) {
-      const grid = document.getElementById("kpiGrid");
-      grid.innerHTML = "";
-
-      kpis.forEach(kpi => {
-        const card = document.createElement("article");
-        card.className = "kpi-card";
-        card.innerHTML = `
-          <h3>${escapeHTML(kpi.metric)}</h3>
-          <div class="kpi-value">${formatKpiValue(kpi)}</div>
-          <div class="kpi-note">${escapeHTML(kpi.note || "")}</div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    function renderCategoryTable(categoryData) {
-      const tbody = document.getElementById("categoryTable");
-      tbody.innerHTML = "";
-
-      categoryData.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${escapeHTML(item.category)}</td>
-          <td class="right">${formatNumber(item.quantity)}</td>
-          <td class="right">${formatKRW(item.revenue)}</td>
-          <td class="right">${formatPercent(item.ratio)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderCharts(categoryData) {
-      const labels = categoryData.map(item => item.category);
-      const revenues = categoryData.map(item => item.revenue);
-      const quantities = categoryData.map(item => item.quantity);
-
-      if (revenueChart) revenueChart.destroy();
-      if (quantityChart) quantityChart.destroy();
-
-      revenueChart = new Chart(document.getElementById("revenueChart"), {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            label: "판매금액",
-            data: revenues,
-            backgroundColor: "rgba(37, 99, 235, 0.72)",
-            borderColor: "rgba(37, 99, 235, 1)",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: {
-              ticks: { callback: value => formatKRW(value) }
-            }
-          }
-        }
-      });
-
-      quantityChart = new Chart(document.getElementById("quantityChart"), {
-        type: "doughnut",
-        data: {
-          labels,
-          datasets: [{
-            label: "판매수량",
-            data: quantities,
-            backgroundColor: [
-              "rgba(37, 99, 235, 0.75)",
-              "rgba(16, 185, 129, 0.75)",
-              "rgba(245, 158, 11, 0.75)",
-              "rgba(239, 68, 68, 0.75)",
-              "rgba(139, 92, 246, 0.75)"
-            ]
-          }]
-        },
-        options: { responsive: true }
-      });
-    }
-
-    function escapeHTML(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function showError(message) {
-      document.getElementById("loading").style.display = "none";
-      const errorBox = document.getElementById("error");
-      errorBox.style.display = "block";
-      errorBox.innerHTML = `
-        <strong>데이터를 불러오지 못했습니다.</strong><br>
-        ${escapeHTML(message)}<br><br>
-        확인할 것:<br>
-        1. Google Sheet 공유 권한이 '링크가 있는 모든 사용자 - 뷰어'인지 확인<br>
-        2. 시트 이름이 정확히 'Dashboard_Summary'인지 확인<br>
-        3. Netlify에서 최신 GitHub 커밋이 다시 배포되었는지 확인
-      `;
-    }
-  </script>
 </body>
 </html>
